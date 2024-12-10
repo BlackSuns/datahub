@@ -142,6 +142,15 @@ sql_common = (
         # datahub does not depend on traitlets directly but great expectations does.
         # https://github.com/ipython/traitlets/issues/741
         "traitlets!=5.2.2",
+        # GE depends on IPython - we have no direct dependency on it.
+        # IPython 8.22.0 added a dependency on traitlets 5.13.x, but only declared a
+        # version requirement of traitlets>5.
+        # See https://github.com/ipython/ipython/issues/14352.
+        # This issue was fixed by https://github.com/ipython/ipython/pull/14353,
+        # which first appeared in IPython 8.22.1.
+        # As such, we just need to avoid that version in order to get the
+        # dependencies that we need. IPython probably should've yanked 8.22.0.
+        "IPython!=8.22.0",
         "greenlet",
         *cachetools_lib,
     }
@@ -525,6 +534,7 @@ plugins: Dict[str, Set[str]] = {
     "qlik-sense": sqlglot_lib | {"requests", "websocket-client"},
     "sigma": sqlglot_lib | {"requests"},
     "sac": sac,
+    "neo4j": {"pandas", "neo4j"},
 }
 
 # This is mainly used to exclude plugins from the Docker image.
@@ -673,6 +683,7 @@ base_dev_requirements = {
             "sigma",
             "sac",
             "cassandra",
+            "neo4j",
         ]
         if plugin
         for dependency in plugins[plugin]
@@ -792,6 +803,7 @@ entry_points = {
         "sigma = datahub.ingestion.source.sigma.sigma:SigmaSource",
         "sac = datahub.ingestion.source.sac.sac:SACSource",
         "cassandra = datahub.ingestion.source.cassandra.cassandra:CassandraSource",
+        "neo4j = datahub.ingestion.source.neo4j.neo4j_source:Neo4jSource",
     ],
     "datahub.ingestion.transformer.plugins": [
         "pattern_cleanup_ownership = datahub.ingestion.transformer.pattern_cleanup_ownership:PatternCleanUpOwnership",
