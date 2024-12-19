@@ -490,7 +490,7 @@ class SqlParsingAggregator(Closeable):
             self._exit_stack.push(self._query_usage_counts)
 
         # Tool Extractor
-        self._tool_meta_extractor = ToolMetaExtractor()
+        self._tool_meta_extractor = ToolMetaExtractor.create(graph)
         self.report.tool_meta_report = self._tool_meta_extractor.report
 
     def close(self) -> None:
@@ -1383,8 +1383,7 @@ class SqlParsingAggregator(Closeable):
         return QueryUrn(query_id).urn()
 
     @classmethod
-    def _composite_query_id(cls, composed_of_queries: Iterable[QueryId]) -> str:
-        composed_of_queries = list(composed_of_queries)
+    def _composite_query_id(cls, composed_of_queries: List[QueryId]) -> str:
         combined = json.dumps(composed_of_queries)
         return f"composite_{generate_hash(combined)}"
 
