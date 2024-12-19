@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 
 
 class SoftDeletedEntitiesCleanupConfig(ConfigModel):
+    enabled: bool = Field(
+        default=True, description="Whether to do soft deletion cleanup."
+    )
     retention_days: Optional[int] = Field(
         10,
         description="Number of days to retain metadata in DataHub",
@@ -60,7 +63,7 @@ class SoftDeletedEntitiesCleanupConfig(ConfigModel):
         description="Query to filter entities",
     )
     limit_entities_delete: Optional[int] = Field(
-        10000, description="Max number of entities to delete."
+        25000, description="Max number of entities to delete."
     )
 
     runtime_limit_seconds: Optional[int] = Field(
@@ -104,7 +107,7 @@ class SoftDeletedEntitiesCleanup:
     def delete_entity(self, urn: str) -> None:
         assert self.ctx.graph
 
-        entity_urn = Urn.create_from_string(urn)
+        entity_urn = Urn.from_string(urn)
         self.report.num_soft_deleted_entity_removed += 1
         self.report.num_soft_deleted_entity_removed_by_type[entity_urn.entity_type] = (
             self.report.num_soft_deleted_entity_removed_by_type.get(
@@ -156,6 +159,8 @@ class SoftDeletedEntitiesCleanup:
                 self.delete_entity(urn)
 
     def cleanup_soft_deleted_entities(self) -> None:
+        if not self.config.enabled:
+            return
         assert self.ctx.graph
         start_time = time.time()
 

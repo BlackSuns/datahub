@@ -5,8 +5,6 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
 import pydantic
 import sqlalchemy.dialects.mssql
-
-# This import verifies that the dependencies are available.
 from pydantic.fields import Field
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.engine.base import Connection
@@ -641,6 +639,13 @@ class SQLServerSource(SQLAlchemySource):
             aspect=data_job.as_datajob_info_aspect,
         ).as_workunit()
 
+        data_platform_instance_aspect = data_job.as_maybe_platform_instance_aspect
+        if data_platform_instance_aspect:
+            yield MetadataChangeProposalWrapper(
+                entityUrn=data_job.urn,
+                aspect=data_platform_instance_aspect,
+            ).as_workunit()
+
         if include_lineage:
             yield MetadataChangeProposalWrapper(
                 entityUrn=data_job.urn,
@@ -656,6 +661,13 @@ class SQLServerSource(SQLAlchemySource):
             entityUrn=data_flow.urn,
             aspect=data_flow.as_dataflow_info_aspect,
         ).as_workunit()
+
+        data_platform_instance_aspect = data_flow.as_maybe_platform_instance_aspect
+        if data_platform_instance_aspect:
+            yield MetadataChangeProposalWrapper(
+                entityUrn=data_flow.urn,
+                aspect=data_platform_instance_aspect,
+            ).as_workunit()
         # TODO: Add SubType when it appear
 
     def get_inspectors(self) -> Iterable[Inspector]:
