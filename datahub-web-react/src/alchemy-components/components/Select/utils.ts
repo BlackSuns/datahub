@@ -59,7 +59,7 @@ export const getSelectFontStyles = (size) => {
 export const getSelectPadding = (size) => {
     const paddingStyles = {
         sm: {
-            padding: `${spacing.xxsm} ${spacing.xxsm}`,
+            padding: `${spacing.xxsm} ${spacing.xsm}`,
         },
         md: {
             padding: `${spacing.xsm} ${spacing.xsm}`,
@@ -125,7 +125,7 @@ export const getSelectStyle = (props: SelectStyleProps) => {
         ...(isOpen
             ? {
                   borderColor: colors.gray[1800],
-                  outline: `2px solid ${colors.violet[300]}`,
+                  outline: `1px solid ${colors.violet[300]}`,
               }
             : {}),
 
