@@ -15,6 +15,7 @@ from datahub.cli import cli_utils
 from datahub.configuration.datetimes import ClickDatetime
 from datahub.emitter.aspect import ASPECT_MAP, TIMESERIES_ASPECT_MAP
 from datahub.ingestion.graph.client import DataHubGraph, get_default_graph
+from datahub.ingestion.graph.config import ClientMode
 from datahub.ingestion.graph.filters import RemovedStatusFilter
 from datahub.telemetry import telemetry
 from datahub.upgrade import upgrade
@@ -124,7 +125,7 @@ def by_registry(
     Delete all metadata written using the given registry id and version pair.
     """
 
-    client = get_default_graph()
+    client = get_default_graph(ClientMode.CLI)
 
     if soft and not dry_run:
         raise click.UsageError(
@@ -175,7 +176,7 @@ def references(urn: str, dry_run: bool, force: bool) -> None:
     Delete all references to an entity (but not the entity itself).
     """
 
-    graph = get_default_graph()
+    graph = get_default_graph(ClientMode.CLI)
     logger.info(f"Using graph: {graph}")
 
     references_count, related_aspects = graph.delete_references_to_urn(
@@ -230,7 +231,7 @@ def references(urn: str, dry_run: bool, force: bool) -> None:
     default=3000,
     type=int,
     help="Batch size when querying for entities to un-soft delete."
-    "Maximum 10000. Large batch sizes may cause timeouts.",
+    "Maximum 5000. Large batch sizes may cause timeouts.",
 )
 def undo_by_filter(
     urn: Optional[str], platform: Optional[str], batch_size: int
@@ -238,7 +239,7 @@ def undo_by_filter(
     """
     Undo soft deletion by filters
     """
-    graph = get_default_graph()
+    graph = get_default_graph(ClientMode.CLI)
     logger.info(f"Using {graph}")
     if urn:
         graph.set_soft_delete_status(urn=urn, delete=False)
@@ -335,7 +336,7 @@ def undo_by_filter(
     default=3000,
     type=int,
     help="Batch size when querying for entities to delete."
-    "Maximum 10000. Large batch sizes may cause timeouts.",
+    "Maximum 5000. Large batch sizes may cause timeouts.",
 )
 @click.option(
     "-n",
@@ -395,8 +396,8 @@ def by_filter(
 
     if not force and not soft and not dry_run:
         message = (
-            "Hard deletion will permanently delete data from DataHub and can be slow. "
-            "We generally recommend using soft deletes instead. "
+            "Hard deletion will permanently delete data and can significantly slow down your instance while being executed. "
+            "We strongly recommend using soft deletes instead. "
             "Do you want to continue?"
         )
         if only_soft_deleted:
@@ -410,7 +411,7 @@ def by_filter(
                 abort=True,
             )
 
-    graph = get_default_graph()
+    graph = get_default_graph(ClientMode.CLI)
     logger.info(f"Using {graph}")
 
     # Determine which urns to delete.
@@ -653,8 +654,8 @@ def _validate_user_aspect_flags(
 def _validate_batch_size(batch_size: int) -> None:
     if batch_size <= 0:
         raise click.UsageError("Batch size must be a positive integer.")
-    elif batch_size > 10000:
-        raise click.UsageError("Batch size cannot exceed 10,000.")
+    elif batch_size > 5000:
+        raise click.UsageError("Batch size cannot exceed 5,000.")
 
 
 def _delete_one_urn(
